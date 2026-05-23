@@ -1,0 +1,14 @@
+{
+  "name": "flycal",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev:mobile": "pnpm --filter mobile start",
+    "dev:web": "pnpm --filter web dev",
+    "dev:backend": "pnpm --filter backend dev"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.33.0"
+}
