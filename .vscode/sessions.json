@@ -11,32 +11,42 @@
         "autoExecuteCommands": true,
         "icon": "person",
         "color": "terminal.ansiGreen",
-        "commands": ["echo hello"]
+        "commands": [
+          "echo hello"
+        ]
       },
       [
         {
           "name": "backend:hono",
           "cwd": "apps/backend",
           "icon": "terminal-bash",
-          "commands": ["pnpm dev"]
+          "commands": [
+            "pnpm dev"
+          ]
         },
         {
           "name": "web:next",
           "cwd": "apps/web",
           "icon": "terminal-bash",
-          "commands": ["pnpm dev"]
+          "commands": [
+            "pnpm dev"
+          ]
         },
         {
           "name": "mobile:expo",
           "cwd": "apps/mobile",
           "icon": "terminal-bash",
-          "commands": ["pnpm start"]
+          "commands": [
+            "pnpm start"
+          ]
         }
       ],
       [
         {
           "name": "cmd",
-          "commands": [""]
+          "commands": [
+            ""
+          ]
         }
       ]
     ]
