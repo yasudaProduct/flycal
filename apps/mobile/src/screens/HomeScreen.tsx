@@ -1,40 +1,66 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import {
-  Dimensions,
-  SafeAreaView,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 48) / 2;
+import { MOCK_HISTORY } from '../mockData';
+import { colors, rounded, spacing, typography } from '../theme';
+import type { HomeScreenProps } from '../types';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }: HomeScreenProps) {
+  const insets = useSafeAreaInsets();
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      navigation.navigate('Analyzing', { imageUri: result.assets[0].uri });
+    }
+  };
+
+  const takePhoto = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('カメラへのアクセスを許可してください');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      navigation.navigate('Analyzing', { imageUri: result.assets[0].uri });
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+    return `${d.getMonth() + 1}/${d.getDate()}（${weekdays[d.getDay()]}）`;
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar style="dark" />
 
-      {/* ヘッダー */}
+      {/* Header */}
       <View style={styles.header}>
-        <View style={styles.logoArea}>
-          <View style={styles.logoBox}>
-            <Text style={styles.logoMark}>✓</Text>
-          </View>
-          <Text style={styles.appName}>FlyCal</Text>
-        </View>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Text style={styles.iconSymbol}>⏱</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Text style={styles.iconSymbol}>⚙</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.appName}>FlyCal</Text>
+        <TouchableOpacity
+          style={styles.historyButton}
+          onPress={() => navigation.navigate('History')}
+        >
+          <Text style={styles.historyButtonText}>履歴</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -42,444 +68,290 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ヒーローカード */}
-        <View style={styles.heroPadding}>
-          <LinearGradient
-            colors={['#F0785A', '#F4A472']}
-            start={{ x: 0.1, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.heroCard}
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <Text style={styles.heroEyebrow}>AI POWERED</Text>
+          <Text style={styles.heroTitle}>{'フライヤーを\nカレンダーに。'}</Text>
+          <Text style={styles.heroSubtext}>
+            画像を選ぶだけで、AIがイベント情報を読み取って予定に追加します。
+          </Text>
+        </View>
+
+        {/* CTA Buttons */}
+        <View style={styles.ctaSection}>
+          <TouchableOpacity
+            style={styles.btnPrimary}
+            activeOpacity={0.85}
+            onPress={pickImage}
           >
-            <View style={styles.heroDecorCircle} />
-
-            <View style={styles.aiBadge}>
-              <Text style={styles.aiBadgeText}>✦ AI POWERED</Text>
-            </View>
-
-            <Text style={styles.heroTitle}>{'フライヤーを\nカレンダーに。'}</Text>
-
-            <Text style={styles.heroSubtext}>
-              {'画像を選ぶだけで、AIがイベント情報を読\nみ取って予定に追加します。'}
-            </Text>
-
-            <View style={styles.heroButtons}>
-              <TouchableOpacity style={styles.btnWhite} activeOpacity={0.85}>
-                <Text style={styles.btnWhiteText}>🖼 画像から</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.btnOrange} activeOpacity={0.85}>
-                <Text style={styles.btnOrangeText}>📷 撮影</Text>
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
-        </View>
-
-        {/* ヒントバー */}
-        <View style={styles.tipRow}>
-          <View style={styles.tipIconBox}>
-            <Text style={styles.tipIconText}>↗</Text>
-          </View>
-          <View style={styles.tipTextBox}>
-            <Text style={styles.tipTitle}>スクショもそのままOK</Text>
-            <Text style={styles.tipSubtext}>SNSで保存したフライヤーを読み込めます</Text>
-          </View>
-        </View>
-
-        {/* 最近のイベント セクションヘッダー */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>最近のイベント</Text>
-          <TouchableOpacity>
-            <Text style={styles.sectionLink}>すべて →</Text>
+            <Text style={styles.btnPrimaryText}>画像を選ぶ</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.btnSecondary}
+            activeOpacity={0.85}
+            onPress={takePhoto}
+          >
+            <Text style={styles.btnSecondaryText}>カメラで撮影</Text>
           </TouchableOpacity>
         </View>
 
-        {/* イベントカード */}
-        <View style={styles.eventCards}>
-          {/* NEON OASIS */}
-          <View style={styles.eventCard}>
-            <View style={[styles.eventImageArea, { backgroundColor: '#1A0A2E' }]}>
-              <Text style={styles.neonSubLabel}>{'NABLUS · mno · sara.jp · KEINA'}</Text>
-              <Text style={styles.neonTitle}>{'NEON\nOASIS'}</Text>
-              <Text style={styles.neonSubTag}>vol.04</Text>
-              <Text style={styles.neonDate}>{'2026.06.28 SAT'}</Text>
-            </View>
-            <Text style={styles.eventName}>NEON OASIS vol.04</Text>
-            <Text style={styles.eventDate}>6/28（土） · 22:00</Text>
-          </View>
-
-          {/* 夜想曲 */}
-          <View style={styles.eventCard}>
-            <View style={[styles.eventImageArea, { backgroundColor: '#F0EDE0' }]}>
-              <Text style={styles.nocturneTitle}>夜想曲</Text>
-              <Text style={styles.nocturneMoon}>🌙</Text>
-              <Text style={styles.nocturneSubtitle}>{'NOCTURNE FEO 2026'}</Text>
-              <Text style={styles.nocturneDate}>{'2026.07.12 SUN'}</Text>
-            </View>
-            <Text style={styles.eventName}>夜想曲 NOCTURNE</Text>
-            <Text style={styles.eventDate}>7/12（日） · 14:00</Text>
-          </View>
+        {/* Tip - Lime Color Block */}
+        <View style={styles.tipBlock}>
+          <Text style={styles.tipEyebrow}>TIPS</Text>
+          <Text style={styles.tipTitle}>スクショもそのままOK</Text>
+          <Text style={styles.tipBody}>
+            SNSで保存したフライヤー画像や、Webページのスクリーンショットからも読み取れます。
+          </Text>
         </View>
 
-        <View style={{ height: 80 }} />
+        {/* Recent Events */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>最近のイベント</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('History')}>
+            <Text style={styles.sectionLink}>すべて見る</Text>
+          </TouchableOpacity>
+        </View>
+
+        {MOCK_HISTORY.slice(0, 2).map((event, i) => (
+          <TouchableOpacity
+            key={i}
+            style={styles.eventCard}
+            activeOpacity={0.7}
+            onPress={() =>
+              navigation.navigate('Result', {
+                imageUri: '',
+                event,
+              })
+            }
+          >
+            <View style={styles.eventCardLeft}>
+              <Text style={styles.eventDate}>{formatDate(event.date)}</Text>
+              <Text style={styles.eventTime}>{event.startTime}</Text>
+            </View>
+            <View style={styles.eventCardRight}>
+              <Text style={styles.eventName}>{event.eventName}</Text>
+              <Text style={styles.eventVenue}>{event.venue}</Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+
+        {/* Usage Info - Lilac Color Block */}
+        <View style={styles.usageBlock}>
+          <Text style={styles.usageEyebrow}>FREE PLAN</Text>
+          <Text style={styles.usageTitle}>今月の利用</Text>
+          <View style={styles.usageRow}>
+            <Text style={styles.usageCount}>2</Text>
+            <Text style={styles.usageTotal}> / 5 回</Text>
+          </View>
+          <Text style={styles.usageBody}>
+            無料プランでは月5回まで解析できます。
+          </Text>
+        </View>
+
+        <View style={{ height: spacing.xxl }} />
       </ScrollView>
-
-      {/* ボトムバー */}
-      <View style={styles.bottomBar}>
-        <View style={styles.bottomBarInner}>
-          <View style={styles.bottomBarLeft}>
-            <View style={styles.calIconBox}>
-              <Text style={styles.calIconText}>📅</Text>
-            </View>
-            <View>
-              <Text style={styles.bottomBarLabel}>今月の登録</Text>
-              <Text style={styles.bottomBarValue}>7件のイベント</Text>
-            </View>
-          </View>
-          <Text style={styles.chevron}>›</Text>
-        </View>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F6F6F6',
+    backgroundColor: colors.canvas,
   },
-
-  // ヘッダー
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
-  },
-  logoArea: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  logoBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 7,
-    backgroundColor: '#E8402A',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoMark: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
   },
   appName: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '700',
-    color: '#1A1A1A',
-    letterSpacing: -0.3,
+    color: colors.ink,
+    letterSpacing: -0.5,
   },
-  headerIcons: {
-    flexDirection: 'row',
-    gap: 8,
+  historyButton: {
+    backgroundColor: colors.surfaceSoft,
+    borderRadius: rounded.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
   },
-  iconButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#F0F0F0',
-    alignItems: 'center',
-    justifyContent: 'center',
+  historyButtonText: {
+    ...typography.bodySm,
+    fontWeight: '500',
+    color: colors.ink,
   },
-  iconSymbol: {
-    fontSize: 15,
-  },
-
-  // スクロール
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 20,
+    paddingBottom: spacing.xl,
   },
 
-  // ヒーローカード
-  heroPadding: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+  // Hero
+  heroSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.lg,
   },
-  heroCard: {
-    borderRadius: 20,
-    padding: 24,
-    paddingTop: 20,
-    overflow: 'hidden',
-  },
-  heroDecorCircle: {
-    position: 'absolute',
-    right: -40,
-    top: -30,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-  },
-  aiBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0,0,0,0.20)',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginBottom: 12,
-  },
-  aiBadgeText: {
-    color: '#B8FFCC',
-    fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 0.5,
+  heroEyebrow: {
+    ...typography.eyebrow,
+    color: colors.ink,
+    marginBottom: spacing.sm,
   },
   heroTitle: {
-    fontSize: 30,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    lineHeight: 38,
-    marginBottom: 10,
+    ...typography.displayXl,
+    color: colors.ink,
+    marginBottom: spacing.md,
   },
   heroSubtext: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.85)',
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  heroButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  btnWhite: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  btnWhiteText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1A1A1A',
-  },
-  btnOrange: {
-    flex: 1,
-    backgroundColor: '#E8592A',
-    borderRadius: 12,
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  btnOrangeText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    ...typography.bodyLg,
+    color: colors.ink,
   },
 
-  // ヒントバー
-  tipRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 14,
-    paddingHorizontal: 16,
+  // CTA
+  ctaSection: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+    marginBottom: spacing.xl,
+  },
+  btnPrimary: {
+    backgroundColor: colors.primary,
+    borderRadius: rounded.pill,
     paddingVertical: 14,
-    gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  tipIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFF0EB',
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  tipIconText: {
-    fontSize: 16,
-    color: '#F0652A',
-    fontWeight: '700',
+  btnPrimaryText: {
+    ...typography.button,
+    color: colors.onPrimary,
   },
-  tipTextBox: {
-    flex: 1,
+  btnSecondary: {
+    backgroundColor: colors.canvas,
+    borderRadius: rounded.pill,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  btnSecondaryText: {
+    ...typography.button,
+    color: colors.ink,
+  },
+
+  // Tip Block (lime)
+  tipBlock: {
+    backgroundColor: colors.blockLime,
+    borderRadius: rounded.lg,
+    marginHorizontal: spacing.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  tipEyebrow: {
+    ...typography.caption,
+    color: colors.ink,
+    marginBottom: spacing.xs,
   },
   tipTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1A1A1A',
-    marginBottom: 2,
+    ...typography.headline,
+    color: colors.ink,
+    marginBottom: spacing.xs,
   },
-  tipSubtext: {
-    fontSize: 12,
-    color: '#888888',
+  tipBody: {
+    ...typography.body,
+    color: colors.ink,
   },
 
-  // セクションヘッダー
+  // Section Header
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 10,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    ...typography.headline,
+    color: colors.ink,
   },
   sectionLink: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#F0652A',
+    ...typography.bodySm,
+    fontWeight: '500',
+    color: colors.ink,
   },
 
-  // イベントカード
-  eventCards: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 12,
-  },
+  // Event Card
   eventCard: {
-    width: CARD_WIDTH,
+    flexDirection: 'row',
+    marginHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.hairlineSoft,
+    gap: spacing.md,
   },
-  eventImageArea: {
-    width: CARD_WIDTH,
-    height: CARD_WIDTH * 1.25,
-    borderRadius: 14,
-    marginBottom: 8,
-    padding: 10,
-    overflow: 'hidden',
-    justifyContent: 'flex-end',
-  },
-
-  // NEON OASIS card content
-  neonSubLabel: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    right: 10,
-    fontSize: 7,
-    color: 'rgba(255,255,255,0.6)',
-    letterSpacing: 0.3,
-  },
-  neonTitle: {
-    position: 'absolute',
-    bottom: 30,
-    left: 10,
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#FF3A5C',
-    lineHeight: 25,
-    letterSpacing: -0.5,
-    textShadowColor: 'rgba(255,100,50,0.8)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-  },
-  neonSubTag: {
-    position: 'absolute',
-    bottom: 20,
-    left: 10,
-    fontSize: 9,
-    color: 'rgba(255,255,255,0.5)',
-  },
-  neonDate: {
-    position: 'absolute',
-    bottom: 8,
-    left: 10,
-    fontSize: 8,
-    color: 'rgba(255,255,255,0.5)',
-  },
-
-  // 夜想曲 card content
-  nocturneTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#2A2A2A',
-    marginBottom: 4,
-  },
-  nocturneMoon: {
-    fontSize: 36,
-    marginBottom: 4,
-  },
-  nocturneSubtitle: {
-    fontSize: 8,
-    color: '#666666',
-    letterSpacing: 0.5,
-  },
-  nocturneDate: {
-    fontSize: 8,
-    color: '#888888',
-    marginTop: 2,
-  },
-
-  // イベント情報
-  eventName: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#1A1A1A',
-    marginBottom: 3,
+  eventCardLeft: {
+    width: 56,
   },
   eventDate: {
-    fontSize: 12,
+    ...typography.bodySm,
     fontWeight: '600',
-    color: '#F0652A',
+    color: colors.ink,
+  },
+  eventTime: {
+    ...typography.caption,
+    color: colors.ink,
+    marginTop: spacing.xxs,
+  },
+  eventCardRight: {
+    flex: 1,
+  },
+  eventName: {
+    ...typography.cardTitle,
+    fontSize: 17,
+    color: colors.ink,
+    marginBottom: spacing.xxs,
+  },
+  eventVenue: {
+    ...typography.bodySm,
+    color: colors.ink,
   },
 
-  // ボトムバー
-  bottomBar: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    paddingBottom: 20,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+  // Usage Block (lilac)
+  usageBlock: {
+    backgroundColor: colors.blockLilac,
+    borderRadius: rounded.lg,
+    marginHorizontal: spacing.lg,
+    padding: spacing.lg,
+    marginTop: spacing.xl,
   },
-  bottomBarInner: {
+  usageEyebrow: {
+    ...typography.caption,
+    color: colors.ink,
+    marginBottom: spacing.xs,
+  },
+  usageTitle: {
+    ...typography.headline,
+    color: colors.ink,
+    marginBottom: spacing.xs,
+  },
+  usageRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: spacing.xs,
   },
-  bottomBarLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  calIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: '#FFF0EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  calIconText: {
-    fontSize: 18,
-  },
-  bottomBarLabel: {
-    fontSize: 12,
-    color: '#888888',
-    marginBottom: 1,
-  },
-  bottomBarValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1A1A1A',
-  },
-  chevron: {
-    fontSize: 24,
-    color: '#CCCCCC',
+  usageCount: {
+    fontSize: 48,
     fontWeight: '300',
+    color: colors.ink,
+    letterSpacing: -1,
+  },
+  usageTotal: {
+    ...typography.bodyLg,
+    color: colors.ink,
+  },
+  usageBody: {
+    ...typography.bodySm,
+    color: colors.ink,
   },
 });
