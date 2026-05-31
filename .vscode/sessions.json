@@ -1,0 +1,44 @@
+{
+  "$schema": "https://cdn.statically.io/gh/nguyenngoclongdev/cdn/main/schema/v11/terminal-keeper.json",
+  "theme": "tribe",
+  "active": "default",
+  "activateOnStartup": true,
+  "keepExistingTerminals": false,
+  "sessions": {
+    "default": [
+      {
+        "name": "hello",
+        "autoExecuteCommands": true,
+        "icon": "person",
+        "color": "terminal.ansiGreen",
+        "commands": ["echo hello"]
+      },
+      [
+        {
+          "name": "backend:hono",
+          "cwd": "apps/backend",
+          "icon": "terminal-bash",
+          "commands": ["pnpm dev"]
+        },
+        {
+          "name": "web:next",
+          "cwd": "apps/web",
+          "icon": "terminal-bash",
+          "commands": ["pnpm dev"]
+        },
+        {
+          "name": "mobile:expo",
+          "cwd": "apps/mobile",
+          "icon": "terminal-bash",
+          "commands": ["pnpm start"]
+        }
+      ],
+      [
+        {
+          "name": "cmd",
+          "commands": [""]
+        }
+      ]
+    ]
+  }
+}

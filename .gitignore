@@ -28,7 +28,6 @@ pnpm-debug.log*
 Thumbs.db
 
 # Editor
-.vscode/
 .idea/
 *.swp
 *.swo
