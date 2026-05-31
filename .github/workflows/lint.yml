@@ -35,5 +35,11 @@ jobs:
       - name: TypeScript - web
         run: pnpm --filter web exec tsc --noEmit
 
+      - name: ESLint - backend
+        run: pnpm --filter backend lint
+
+      - name: ESLint - mobile
+        run: pnpm --filter mobile lint
+
       - name: ESLint - web
         run: pnpm --filter web lint
