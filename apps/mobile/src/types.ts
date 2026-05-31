@@ -11,6 +11,9 @@ export type EventData = {
   description: string;
   url: string;
   confidence: number;
+  category?: string;
+  thumbnailColor?: string;
+  thumbnailLabel?: string;
 };
 
 export type RootStackParamList = {

@@ -1,6 +1,7 @@
-import * as ImagePicker from 'expo-image-picker';
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
+import { LinearGradient } from "expo-linear-gradient";
+import * as ImagePicker from "expo-image-picker";
+import { StatusBar } from "expo-status-bar";
+import React from "react";
 import {
   Alert,
   ScrollView,
@@ -8,45 +9,59 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { MOCK_HISTORY } from '../mockData';
-import { colors, rounded, spacing, typography } from '../theme';
-import type { HomeScreenProps } from '../types';
+import { MOCK_HISTORY } from "../mockData";
+import { colors, rounded, spacing, typography } from "../theme";
+import type { HomeScreenProps } from "../types";
+
+const MONTH_LABELS = [
+  "JAN",
+  "FEB",
+  "MAR",
+  "APR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AUG",
+  "SEP",
+  "OCT",
+  "NOV",
+  "DEC",
+];
+const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const insets = useSafeAreaInsets();
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ["images"],
       quality: 0.8,
     });
     if (!result.canceled && result.assets[0]) {
-      navigation.navigate('Analyzing', { imageUri: result.assets[0].uri });
+      navigation.navigate("Analyzing", { imageUri: result.assets[0].uri });
     }
   };
 
   const takePhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('カメラへのアクセスを許可してください');
+      Alert.alert("カメラへのアクセスを許可してください");
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
       quality: 0.8,
     });
     if (!result.canceled && result.assets[0]) {
-      navigation.navigate('Analyzing', { imageUri: result.assets[0].uri });
+      navigation.navigate("Analyzing", { imageUri: result.assets[0].uri });
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
-    return `${d.getMonth() + 1}/${d.getDate()}（${weekdays[d.getDay()]}）`;
-  };
+  const nearestEvent = MOCK_HISTORY[0];
+  const nearestDate = new Date(nearestEvent.date);
+  const nearestFormatted = `${nearestDate.getMonth() + 1}/${nearestDate.getDate()} (${WEEKDAYS[nearestDate.getDay()]})`;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -54,13 +69,23 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.appName}>FlyCal</Text>
-        <TouchableOpacity
-          style={styles.historyButton}
-          onPress={() => navigation.navigate('History')}
-        >
-          <Text style={styles.historyButtonText}>履歴</Text>
-        </TouchableOpacity>
+        <View style={styles.logoArea}>
+          <View style={styles.logoBox}>
+            <Text style={styles.logoMark}>✓</Text>
+          </View>
+          <Text style={styles.appName}>FlyCal</Text>
+        </View>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => navigation.navigate("History")}
+          >
+            <Text style={styles.iconSymbol}>⏱</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Text style={styles.iconSymbol}>⚙</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -68,88 +93,98 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Section */}
+        {/* Hero Title */}
         <View style={styles.heroSection}>
-          <Text style={styles.heroEyebrow}>AI POWERED</Text>
-          <Text style={styles.heroTitle}>{'フライヤーを\nカレンダーに。'}</Text>
+          <Text style={styles.heroTitle}>{"これから行く\nイベント"}</Text>
           <Text style={styles.heroSubtext}>
-            画像を選ぶだけで、AIがイベント情報を読み取って予定に追加します。
+            {MOCK_HISTORY.length}件保存済み · 直近 {nearestFormatted}
           </Text>
         </View>
 
-        {/* CTA Buttons */}
-        <View style={styles.ctaSection}>
-          <TouchableOpacity
-            style={styles.btnPrimary}
-            activeOpacity={0.85}
-            onPress={pickImage}
-          >
-            <Text style={styles.btnPrimaryText}>画像を選ぶ</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnSecondary}
-            activeOpacity={0.85}
-            onPress={takePhoto}
-          >
-            <Text style={styles.btnSecondaryText}>カメラで撮影</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Event List */}
+        {MOCK_HISTORY.map((event, i) => {
+          const d = new Date(event.date);
+          const day = d.getDate();
+          const monthLabel = MONTH_LABELS[d.getMonth()];
+          const weekday = WEEKDAYS[d.getDay()];
 
-        {/* Tip - Lime Color Block */}
-        <View style={styles.tipBlock}>
-          <Text style={styles.tipEyebrow}>TIPS</Text>
-          <Text style={styles.tipTitle}>スクショもそのままOK</Text>
-          <Text style={styles.tipBody}>
-            SNSで保存したフライヤー画像や、Webページのスクリーンショットからも読み取れます。
-          </Text>
-        </View>
+          return (
+            <TouchableOpacity
+              key={i}
+              style={styles.eventRow}
+              activeOpacity={0.7}
+              onPress={() =>
+                navigation.navigate("Result", { imageUri: "", event })
+              }
+            >
+              {/* Date column */}
+              <View style={styles.dateCol}>
+                <Text style={styles.dateDay}>{day}</Text>
+                <Text style={styles.dateMonth}>{monthLabel}</Text>
+                <Text style={styles.dateWeekday}>{weekday}</Text>
+              </View>
 
-        {/* Recent Events */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>最近のイベント</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('History')}>
-            <Text style={styles.sectionLink}>すべて見る</Text>
-          </TouchableOpacity>
-        </View>
+              {/* Thumbnail */}
+              <View
+                style={[
+                  styles.thumbnail,
+                  {
+                    backgroundColor:
+                      event.thumbnailColor || colors.surfaceSoft,
+                  },
+                ]}
+              >
+                <Text style={styles.thumbnailText}>
+                  {event.thumbnailLabel || event.eventName.slice(0, 4)}
+                </Text>
+              </View>
 
-        {MOCK_HISTORY.slice(0, 2).map((event, i) => (
-          <TouchableOpacity
-            key={i}
-            style={styles.eventCard}
-            activeOpacity={0.7}
-            onPress={() =>
-              navigation.navigate('Result', {
-                imageUri: '',
-                event,
-              })
-            }
-          >
-            <View style={styles.eventCardLeft}>
-              <Text style={styles.eventDate}>{formatDate(event.date)}</Text>
-              <Text style={styles.eventTime}>{event.startTime}</Text>
-            </View>
-            <View style={styles.eventCardRight}>
-              <Text style={styles.eventName}>{event.eventName}</Text>
-              <Text style={styles.eventVenue}>{event.venue}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+              {/* Event info */}
+              <View style={styles.eventInfo}>
+                <Text style={styles.eventCategory}>
+                  {event.category || "イベント"}
+                </Text>
+                <Text style={styles.eventName}>{event.eventName}</Text>
+                <Text style={styles.eventVenue}>📍 {event.venue}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
 
-        {/* Usage Info - Lilac Color Block */}
-        <View style={styles.usageBlock}>
-          <Text style={styles.usageEyebrow}>FREE PLAN</Text>
-          <Text style={styles.usageTitle}>今月の利用</Text>
-          <View style={styles.usageRow}>
-            <Text style={styles.usageCount}>2</Text>
-            <Text style={styles.usageTotal}> / 5 回</Text>
-          </View>
-          <Text style={styles.usageBody}>
-            無料プランでは月5回まで解析できます。
-          </Text>
-        </View>
-
-        <View style={{ height: spacing.xxl }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* Bottom CTA Bar */}
+      <View
+        style={[
+          styles.bottomBar,
+          { paddingBottom: insets.bottom || spacing.md },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.addButtonWrapper}
+          activeOpacity={0.85}
+          onPress={pickImage}
+        >
+          <LinearGradient
+            colors={["#F0785A", "#F4A472"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.addButton}
+          >
+            <Text style={styles.addButtonIcon}>✦</Text>
+            <Text style={styles.addButtonText}>フライヤーを追加</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.cameraButton}
+          activeOpacity={0.85}
+          onPress={takePhoto}
+        >
+          <Text style={styles.cameraButtonIcon}>📷</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -157,32 +192,58 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.canvas,
+    backgroundColor: colors.surfaceSoft,
   },
+
+  // Header
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
+  logoArea: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  logoBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 7,
+    backgroundColor: "#E8402A",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoMark: {
+    color: colors.onPrimary,
+    fontSize: 14,
+    fontWeight: "700",
+  },
   appName: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: "700",
     color: colors.ink,
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
-  historyButton: {
-    backgroundColor: colors.surfaceSoft,
-    borderRadius: rounded.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+  headerIcons: {
+    flexDirection: "row",
+    gap: spacing.xs,
   },
-  historyButtonText: {
-    ...typography.bodySm,
-    fontWeight: '500',
-    color: colors.ink,
+  iconButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.canvas,
+    alignItems: "center",
+    justifyContent: "center",
   },
+  iconSymbol: {
+    fontSize: 15,
+  },
+
+  // Scroll
   scrollView: {
     flex: 1,
   },
@@ -193,165 +254,137 @@ const styles = StyleSheet.create({
   // Hero
   heroSection: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxl,
+    paddingTop: spacing.xl,
     paddingBottom: spacing.lg,
   },
-  heroEyebrow: {
-    ...typography.eyebrow,
-    color: colors.ink,
-    marginBottom: spacing.sm,
-  },
   heroTitle: {
-    ...typography.displayXl,
+    fontSize: 32,
+    fontWeight: "800",
     color: colors.ink,
-    marginBottom: spacing.md,
+    lineHeight: 40,
+    letterSpacing: -0.5,
+    marginBottom: spacing.xs,
   },
   heroSubtext: {
-    ...typography.bodyLg,
-    color: colors.ink,
-  },
-
-  // CTA
-  ctaSection: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
-  },
-  btnPrimary: {
-    backgroundColor: colors.primary,
-    borderRadius: rounded.pill,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  btnPrimaryText: {
-    ...typography.button,
-    color: colors.onPrimary,
-  },
-  btnSecondary: {
-    backgroundColor: colors.canvas,
-    borderRadius: rounded.pill,
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.hairline,
-  },
-  btnSecondaryText: {
-    ...typography.button,
-    color: colors.ink,
-  },
-
-  // Tip Block (lime)
-  tipBlock: {
-    backgroundColor: colors.blockLime,
-    borderRadius: rounded.lg,
-    marginHorizontal: spacing.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
-  },
-  tipEyebrow: {
-    ...typography.caption,
-    color: colors.ink,
-    marginBottom: spacing.xs,
-  },
-  tipTitle: {
-    ...typography.headline,
-    color: colors.ink,
-    marginBottom: spacing.xs,
-  },
-  tipBody: {
-    ...typography.body,
-    color: colors.ink,
-  },
-
-  // Section Header
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    ...typography.headline,
-    color: colors.ink,
-  },
-  sectionLink: {
     ...typography.bodySm,
-    fontWeight: '500',
     color: colors.ink,
+    opacity: 0.5,
   },
 
-  // Event Card
-  eventCard: {
-    flexDirection: 'row',
-    marginHorizontal: spacing.lg,
+  // Event Row
+  eventRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.hairlineSoft,
     gap: spacing.md,
   },
-  eventCardLeft: {
-    width: 56,
+
+  // Date Column
+  dateCol: {
+    width: 40,
+    alignItems: "center",
   },
-  eventDate: {
-    ...typography.bodySm,
-    fontWeight: '600',
+  dateDay: {
+    fontSize: 28,
+    fontWeight: "700",
     color: colors.ink,
+    lineHeight: 32,
   },
-  eventTime: {
+  dateMonth: {
     ...typography.caption,
     color: colors.ink,
-    marginTop: spacing.xxs,
+    opacity: 0.5,
+    lineHeight: 14,
   },
-  eventCardRight: {
+  dateWeekday: {
+    ...typography.caption,
+    color: colors.ink,
+    opacity: 0.4,
+    lineHeight: 14,
+  },
+
+  // Thumbnail
+  thumbnail: {
+    width: 64,
+    height: 64,
+    borderRadius: rounded.md,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  thumbnailText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: colors.ink,
+    textAlign: "center",
+    lineHeight: 13,
+    opacity: 0.7,
+  },
+
+  // Event Info
+  eventInfo: {
     flex: 1,
   },
+  eventCategory: {
+    ...typography.caption,
+    color: "#F0652A",
+    marginBottom: 2,
+  },
   eventName: {
-    ...typography.cardTitle,
-    fontSize: 17,
+    fontSize: 16,
+    fontWeight: "700",
     color: colors.ink,
-    marginBottom: spacing.xxs,
+    letterSpacing: -0.2,
+    marginBottom: 2,
   },
   eventVenue: {
     ...typography.bodySm,
+    fontSize: 13,
     color: colors.ink,
+    opacity: 0.5,
   },
 
-  // Usage Block (lilac)
-  usageBlock: {
-    backgroundColor: colors.blockLilac,
-    borderRadius: rounded.lg,
-    marginHorizontal: spacing.lg,
-    padding: spacing.lg,
-    marginTop: spacing.xl,
+  // Bottom Bar
+  bottomBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: "row",
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceSoft,
   },
-  usageEyebrow: {
-    ...typography.caption,
-    color: colors.ink,
-    marginBottom: spacing.xs,
+  addButtonWrapper: {
+    flex: 1,
   },
-  usageTitle: {
-    ...typography.headline,
-    color: colors.ink,
-    marginBottom: spacing.xs,
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: rounded.pill,
+    paddingVertical: 16,
+    gap: spacing.xs,
   },
-  usageRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: spacing.xs,
+  addButtonIcon: {
+    fontSize: 16,
+    color: colors.onPrimary,
   },
-  usageCount: {
-    fontSize: 48,
-    fontWeight: '300',
-    color: colors.ink,
-    letterSpacing: -1,
+  addButtonText: {
+    ...typography.button,
+    color: colors.onPrimary,
   },
-  usageTotal: {
-    ...typography.bodyLg,
-    color: colors.ink,
+  cameraButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.ink,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  usageBody: {
-    ...typography.bodySm,
-    color: colors.ink,
+  cameraButtonIcon: {
+    fontSize: 22,
   },
 });

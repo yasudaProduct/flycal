@@ -18,7 +18,7 @@ import type { EventData, ResultScreenProps } from '../types';
 
 type FieldKey = keyof EventData;
 
-const FIELD_LABELS: Record<FieldKey, string> = {
+const FIELD_LABELS: Partial<Record<FieldKey, string>> = {
   eventName: 'イベント名',
   date: '開催日',
   startTime: '開始時間',
