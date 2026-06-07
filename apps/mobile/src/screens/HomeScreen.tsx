@@ -129,8 +129,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 style={[
                   styles.thumbnail,
                   {
-                    backgroundColor:
-                      event.thumbnailColor || colors.surfaceSoft,
+                    backgroundColor: event.thumbnailColor || colors.surfaceSoft,
                   },
                 ]}
               >
@@ -173,16 +172,19 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             style={styles.addButton}
           >
             <Text style={styles.addButtonIcon}>✦</Text>
-            <Text style={styles.addButtonText}>フライヤーを追加</Text>
+            <Text style={styles.addButtonText}>選択</Text>
           </LinearGradient>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.cameraButton}
+          style={styles.cameraButtonWrapper}
           activeOpacity={0.85}
           onPress={takePhoto}
         >
-          <Text style={styles.cameraButtonIcon}>📷</Text>
+          <View style={styles.cameraButton}>
+            <Text style={styles.cameraButtonIcon}>📷</Text>
+            <Text style={styles.cameraButtonText}>撮影</Text>
+          </View>
         </TouchableOpacity>
       </View>
     </View>
@@ -376,15 +378,23 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: colors.onPrimary,
   },
+  cameraButtonWrapper: {
+    flex: 1,
+  },
   cameraButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.ink,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: rounded.pill,
+    paddingVertical: 16,
+    gap: spacing.xs,
+    backgroundColor: colors.ink,
   },
   cameraButtonIcon: {
-    fontSize: 22,
+    fontSize: 16,
+  },
+  cameraButtonText: {
+    ...typography.button,
+    color: colors.onPrimary,
   },
 });
