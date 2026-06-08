@@ -31,10 +31,11 @@ analyze.post('/analyze', requireAnonymousId, async (c) => {
     throw new ApiError('INVALID_REQUEST', 'multipart/form-data 形式で送信してください。')
   }
 
-  const image = form.get('image')
-  if (!(image instanceof File)) {
+  const imageEntry = form.get('image') as File | string | null
+  if (!imageEntry || typeof imageEntry === 'string') {
     throw new ApiError('INVALID_REQUEST', 'image フィールドが必要です。')
   }
+  const image = imageEntry
   if (image.size > MAX_IMAGE_BYTES) {
     throw new ApiError('UNSUPPORTED_IMAGE', '画像サイズが上限（10MB）を超えています。')
   }
