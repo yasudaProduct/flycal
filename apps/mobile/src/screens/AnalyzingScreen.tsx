@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import {
+  Alert,
   Animated,
   Easing,
   Image,
@@ -9,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MOCK_EVENT } from '../mockData';
+import { ApiError, analyzeImage } from '../api/client';
 import { colors, spacing, typography } from '../theme';
 import type { AnalyzingScreenProps } from '../types';
 
@@ -69,14 +70,27 @@ export default function AnalyzingScreen({ navigation, route }: AnalyzingScreenPr
       useNativeDriver: false,
     }).start();
 
-    const timer = setTimeout(() => {
-      navigation.replace('Result', {
-        imageUri,
-        event: MOCK_EVENT,
-      });
-    }, 3200);
+    let cancelled = false;
 
-    return () => clearTimeout(timer);
+    analyzeImage(imageUri)
+      .then((event) => {
+        if (cancelled) return;
+        navigation.replace('Result', { imageUri, event });
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        const message =
+          err instanceof ApiError
+            ? err.message
+            : 'サーバーに接続できませんでした。通信環境を確認してください。';
+        Alert.alert('解析に失敗しました', message, [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [rotation, progress, dotOpacity1, dotOpacity2, dotOpacity3, navigation, imageUri]);
 
   return (

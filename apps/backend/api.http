@@ -1,0 +1,94 @@
+### flycal backend API リクエスト集（VSCode REST Client 用）
+# 使い方:
+#   - VSCode 拡張「REST Client」(humao.rest-client) をインストール
+#   - `pnpm dev` でローカル起動（http://localhost:8787）
+#   - 各リクエスト上の「Send Request」をクリック
+# 詳細仕様: docs/api-design.md
+
+@baseUrl = http://localhost:8787
+@apiUrl = {{baseUrl}}/api/v1
+# 匿名ユーザーID（端末で生成する UUID 相当。任意の固定値でよい）
+@anonymousId = dev-anon-0001
+
+###############################################
+# ルート（疎通確認）
+###############################################
+
+### Hello Hono
+GET {{baseUrl}}/
+
+###############################################
+# GET /api/v1/health — ヘルスチェック（認証不要）
+###############################################
+
+### health
+GET {{apiUrl}}/health
+
+###############################################
+# GET /api/v1/usage — 当月の利用状況
+###############################################
+
+### usage（正常）
+GET {{apiUrl}}/usage
+X-Anonymous-Id: {{anonymousId}}
+X-App-Version: 0.1.0
+
+### usage（匿名IDなし → 401 MISSING_ANONYMOUS_ID）
+GET {{apiUrl}}/usage
+
+###############################################
+# POST /api/v1/analyze — 画像からイベント情報を抽出
+#   ※ multipart/form-data。`./fixtures/flyer.jpg` を用意するか
+#     任意の画像パスに書き換えて実行する。
+###############################################
+
+### analyze（正常 / hint あり）
+POST {{apiUrl}}/analyze
+X-Anonymous-Id: {{anonymousId}}
+X-App-Version: 0.1.0
+Content-Type: multipart/form-data; boundary=----flycalBoundary
+
+------flycalBoundary
+Content-Disposition: form-data; name="image"; filename="flyer.jpg"
+Content-Type: image/jpeg
+
+< ./fixtures/flyer.jpg
+------flycalBoundary
+Content-Disposition: form-data; name="hint"
+
+東京公演
+------flycalBoundary--
+
+### analyze（画像なし → 400 INVALID_REQUEST）
+POST {{apiUrl}}/analyze
+X-Anonymous-Id: {{anonymousId}}
+Content-Type: multipart/form-data; boundary=----flycalBoundary
+
+------flycalBoundary
+Content-Disposition: form-data; name="hint"
+
+画像フィールドを省略したケース
+------flycalBoundary--
+
+### analyze（非対応形式 → 400 UNSUPPORTED_IMAGE）
+POST {{apiUrl}}/analyze
+X-Anonymous-Id: {{anonymousId}}
+Content-Type: multipart/form-data; boundary=----flycalBoundary
+
+------flycalBoundary
+Content-Disposition: form-data; name="image"; filename="flyer.gif"
+Content-Type: image/gif
+
+< ./fixtures/flyer.jpg
+------flycalBoundary--
+
+### analyze（匿名IDなし → 401 MISSING_ANONYMOUS_ID）
+POST {{apiUrl}}/analyze
+Content-Type: multipart/form-data; boundary=----flycalBoundary
+
+------flycalBoundary
+Content-Disposition: form-data; name="image"; filename="flyer.jpg"
+Content-Type: image/jpeg
+
+< ./fixtures/flyer.jpg
+------flycalBoundary--
