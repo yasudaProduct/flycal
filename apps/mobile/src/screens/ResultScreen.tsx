@@ -13,8 +13,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { EventData } from '../models/event';
 import { colors, rounded, spacing, typography } from '../theme';
-import type { EventData, ResultScreenProps } from '../types';
+import type { ResultScreenProps } from '../types';
 
 type FieldKey = keyof EventData;
 

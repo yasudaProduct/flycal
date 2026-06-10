@@ -1,20 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-export type EventData = {
-  eventName: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  venue: string;
-  address: string;
-  performers: string;
-  description: string;
-  url: string;
-  confidence: number;
-  category?: string;
-  thumbnailColor?: string;
-  thumbnailLabel?: string;
-};
+import type { EventData } from './models/event';
 
 export type RootStackParamList = {
   Home: undefined;

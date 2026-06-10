@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { API_URL } from "../config";
-import type { EventData } from "../types";
+import type { ApiEventInfo, EventData } from "../models/event";
+import { toEventData } from "../models/event";
 
 // ---- 匿名ユーザーID（docs/api-design.md 2.3） -------------------------------
 
@@ -34,20 +35,6 @@ export async function getAnonymousId(): Promise<string> {
 }
 
 // ---- レスポンス型（docs/api-design.md 5） ----------------------------------
-
-interface ApiEventInfo {
-  title: string | null;
-  date: string | null;
-  startTime: string | null;
-  endTime: string | null;
-  venue: string | null;
-  address: string | null;
-  performers: string[];
-  description: string | null;
-  officialUrl: string | null;
-  confidence: number;
-  unknownFields: string[];
-}
 
 interface UsageInfo {
   yearMonth: string;
@@ -92,24 +79,6 @@ async function parseError(res: Response): Promise<ApiError> {
   } catch {
     return new ApiError("INTERNAL_ERROR", `通信に失敗しました (${res.status})`, res.status);
   }
-}
-
-// ---- マッピング ------------------------------------------------------------
-
-/** バックエンドの EventInfo をモバイルの EventData へ変換する */
-function toEventData(event: ApiEventInfo): EventData {
-  return {
-    eventName: event.title ?? "",
-    date: event.date ?? "",
-    startTime: event.startTime ?? "",
-    endTime: event.endTime ?? "",
-    venue: event.venue ?? "",
-    address: event.address ?? "",
-    performers: event.performers.join(" / "),
-    description: event.description ?? "",
-    url: event.officialUrl ?? "",
-    confidence: event.confidence,
-  };
 }
 
 // ---- エンドポイント --------------------------------------------------------

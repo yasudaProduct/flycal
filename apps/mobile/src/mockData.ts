@@ -1,4 +1,4 @@
-import type { EventData } from "./types";
+import type { EventData } from "./models/event";
 
 export const MOCK_EVENT: EventData = {
   eventName: "NEON OASIS vol.04",
