@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from "react";
 import {
   Alert,
   Animated,
@@ -7,14 +7,17 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ApiError, analyzeImage } from '../api/client';
-import { colors, spacing, typography } from '../theme';
-import type { AnalyzingScreenProps } from '../types';
+import { ApiError, analyzeImage } from "../api/client";
+import { colors, spacing, typography } from "../theme";
+import type { AnalyzingScreenProps } from "../types";
 
-export default function AnalyzingScreen({ navigation, route }: AnalyzingScreenProps) {
+export default function AnalyzingScreen({
+  navigation,
+  route,
+}: AnalyzingScreenProps) {
   const insets = useSafeAreaInsets();
   const { imageUri } = route.params;
 
@@ -24,25 +27,29 @@ export default function AnalyzingScreen({ navigation, route }: AnalyzingScreenPr
   const dotOpacity2 = useMemo(() => new Animated.Value(0.3), []);
   const dotOpacity3 = useMemo(() => new Animated.Value(0.3), []);
 
+  // 回転アニメーション
   const spin = useMemo(
     () =>
       rotation.interpolate({
         inputRange: [0, 1],
-        outputRange: ['0deg', '360deg'],
+        outputRange: ["0deg", "360deg"],
       }),
     [rotation],
   );
 
+  // 進捗バーの幅
   const progressWidth = useMemo(
     () =>
       progress.interpolate({
         inputRange: [0, 1],
-        outputRange: ['0%', '100%'],
+        outputRange: ["0%", "100%"],
       }),
     [progress],
   );
 
+  // アニメーション開始
   useEffect(() => {
+    // 回転アニメーション
     Animated.loop(
       Animated.timing(rotation, {
         toValue: 1,
@@ -52,17 +59,43 @@ export default function AnalyzingScreen({ navigation, route }: AnalyzingScreenPr
       }),
     ).start();
 
+    // ドットアニメーション
     Animated.loop(
       Animated.sequence([
-        Animated.timing(dotOpacity1, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.timing(dotOpacity2, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.timing(dotOpacity3, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.timing(dotOpacity1, { toValue: 0.3, duration: 200, useNativeDriver: true }),
-        Animated.timing(dotOpacity2, { toValue: 0.3, duration: 200, useNativeDriver: true }),
-        Animated.timing(dotOpacity3, { toValue: 0.3, duration: 200, useNativeDriver: true }),
+        Animated.timing(dotOpacity1, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dotOpacity2, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dotOpacity3, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dotOpacity1, {
+          toValue: 0.3,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dotOpacity2, {
+          toValue: 0.3,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dotOpacity3, {
+          toValue: 0.3,
+          duration: 200,
+          useNativeDriver: true,
+        }),
       ]),
     ).start();
 
+    // 進捗バーのアニメーション
     Animated.timing(progress, {
       toValue: 1,
       duration: 3000,
@@ -72,33 +105,46 @@ export default function AnalyzingScreen({ navigation, route }: AnalyzingScreenPr
 
     let cancelled = false;
 
+    // 画像解析
     analyzeImage(imageUri)
       .then((event) => {
         if (cancelled) return;
-        navigation.replace('Result', { imageUri, event });
+        navigation.replace("Result", { imageUri, event });
       })
       .catch((err: unknown) => {
         if (cancelled) return;
         const message =
           err instanceof ApiError
             ? err.message
-            : 'サーバーに接続できませんでした。通信環境を確認してください。';
-        Alert.alert('解析に失敗しました', message, [
-          { text: 'OK', onPress: () => navigation.goBack() },
+            : "サーバーに接続できませんでした。通信環境を確認してください。";
+        Alert.alert("解析に失敗しました", message, [
+          { text: "OK", onPress: () => navigation.goBack() },
         ]);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [rotation, progress, dotOpacity1, dotOpacity2, dotOpacity3, navigation, imageUri]);
+  }, [
+    rotation,
+    progress,
+    dotOpacity1,
+    dotOpacity2,
+    dotOpacity3,
+    navigation,
+    imageUri,
+  ]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Image preview */}
       <View style={styles.imageContainer}>
         {imageUri ? (
-          <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
+          <Image
+            source={{ uri: imageUri }}
+            style={styles.image}
+            resizeMode="cover"
+          />
         ) : (
           <View style={styles.imagePlaceholder}>
             <Text style={styles.imagePlaceholderText}>Preview</Text>
@@ -110,15 +156,23 @@ export default function AnalyzingScreen({ navigation, route }: AnalyzingScreenPr
       {/* Analysis UI */}
       <View style={styles.analysisArea}>
         <View style={styles.spinnerContainer}>
-          <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]}>
+          <Animated.View
+            style={[styles.spinner, { transform: [{ rotate: spin }] }]}
+          >
             <View style={styles.spinnerArc} />
           </Animated.View>
         </View>
 
         <View style={styles.dotsRow}>
-          <Animated.Text style={[styles.dot, { opacity: dotOpacity1 }]}>.</Animated.Text>
-          <Animated.Text style={[styles.dot, { opacity: dotOpacity2 }]}>.</Animated.Text>
-          <Animated.Text style={[styles.dot, { opacity: dotOpacity3 }]}>.</Animated.Text>
+          <Animated.Text style={[styles.dot, { opacity: dotOpacity1 }]}>
+            .
+          </Animated.Text>
+          <Animated.Text style={[styles.dot, { opacity: dotOpacity2 }]}>
+            .
+          </Animated.Text>
+          <Animated.Text style={[styles.dot, { opacity: dotOpacity3 }]}>
+            .
+          </Animated.Text>
         </View>
 
         <Text style={styles.analysisTitle}>解析中</Text>
@@ -128,7 +182,9 @@ export default function AnalyzingScreen({ navigation, route }: AnalyzingScreenPr
 
         {/* Progress bar */}
         <View style={styles.progressTrack}>
-          <Animated.View style={[styles.progressBar, { width: progressWidth }]} />
+          <Animated.View
+            style={[styles.progressBar, { width: progressWidth }]}
+          />
         </View>
 
         <Text style={styles.analysisCaption}>
@@ -145,17 +201,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.canvas,
   },
   imageContainer: {
-    height: '40%',
+    height: "40%",
     backgroundColor: colors.surfaceSoft,
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   imagePlaceholder: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.surfaceSoft,
   },
   imagePlaceholderText: {
@@ -163,25 +219,25 @@ const styles = StyleSheet.create({
     color: colors.hairline,
   },
   imageOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: "rgba(0,0,0,0.05)",
   },
 
   analysisArea: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: spacing.xl,
   },
   spinnerContainer: {
     width: 56,
     height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: spacing.lg,
   },
   spinner: {
@@ -192,25 +248,25 @@ const styles = StyleSheet.create({
     borderColor: colors.hairlineSoft,
   },
   spinnerArc: {
-    position: 'absolute',
+    position: "absolute",
     top: -2,
     left: -2,
     width: 48,
     height: 48,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: "transparent",
     borderTopColor: colors.primary,
   },
   dotsRow: {
-    flexDirection: 'row',
-    position: 'absolute',
-    top: '50%',
+    flexDirection: "row",
+    position: "absolute",
+    top: "50%",
     marginTop: -80,
   },
   dot: {
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.primary,
     marginHorizontal: 2,
   },
@@ -222,19 +278,19 @@ const styles = StyleSheet.create({
   analysisBody: {
     ...typography.body,
     color: colors.ink,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.xl,
   },
   progressTrack: {
-    width: '100%',
+    width: "100%",
     height: 4,
     backgroundColor: colors.hairlineSoft,
     borderRadius: 2,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: spacing.md,
   },
   progressBar: {
-    height: '100%',
+    height: "100%",
     backgroundColor: colors.primary,
     borderRadius: 2,
   },

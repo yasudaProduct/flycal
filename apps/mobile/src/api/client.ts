@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { File as ExpoFile, UploadType } from "expo-file-system";
 
 import { API_URL } from "../config";
 import type { ApiEventInfo, EventData } from "../models/event";
@@ -81,6 +82,21 @@ async function parseError(res: Response): Promise<ApiError> {
   }
 }
 
+function parseUploadError(status: number, body: string): ApiError {
+  try {
+    const parsed = JSON.parse(body) as {
+      error?: { code?: string; message?: string };
+    };
+    return new ApiError(
+      parsed.error?.code ?? "INTERNAL_ERROR",
+      parsed.error?.message ?? "エラーが発生しました。",
+      status,
+    );
+  } catch {
+    return new ApiError("INTERNAL_ERROR", `通信に失敗しました (${status})`, status);
+  }
+}
+
 // ---- エンドポイント --------------------------------------------------------
 
 /** 画像から推定される MIME タイプ（拡張子ベース） */
@@ -104,28 +120,22 @@ export async function analyzeImage(
   hint?: string,
 ): Promise<EventData> {
   const anonymousId = await getAnonymousId();
+  const mimeType = guessMimeType(imageUri);
+  const file = new ExpoFile(imageUri);
 
-  const form = new FormData();
-  form.append("image", {
-    uri: imageUri,
-    name: `flyer.${imageUri.split(".").pop() ?? "jpg"}`,
-    type: guessMimeType(imageUri),
-  } as unknown as Blob);
-  if (hint) {
-    form.append("hint", hint);
-  }
-
-  const res = await fetch(`${API_URL}/analyze`, {
-    method: "POST",
+  const result = await file.upload(`${API_URL}/analyze`, {
+    uploadType: UploadType.MULTIPART,
+    fieldName: "image",
+    mimeType,
     headers: { "X-Anonymous-Id": anonymousId },
-    body: form,
+    ...(hint ? { parameters: { hint } } : {}),
   });
 
-  if (!res.ok) {
-    throw await parseError(res);
+  if (result.status < 200 || result.status >= 300) {
+    throw parseUploadError(result.status, result.body);
   }
 
-  const data = (await res.json()) as AnalyzeResponse;
+  const data = JSON.parse(result.body) as AnalyzeResponse;
   return toEventData(data.event);
 }
 
