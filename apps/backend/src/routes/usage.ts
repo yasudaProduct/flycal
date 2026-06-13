@@ -1,10 +1,10 @@
 import { Hono } from 'hono'
 import { requireAnonymousId } from '../middleware/anonymous'
 import { getUsage } from '../mocks/store'
-import type { AppVariables, UsageResponse } from '../types'
+import type { AppBindings, AppVariables, UsageResponse } from '../types'
 
 // GET /api/v1/usage — 当月の利用状況を取得（docs/api-design.md 5.3）
-export const usage = new Hono<{ Variables: AppVariables }>()
+export const usage = new Hono<{ Bindings: AppBindings; Variables: AppVariables }>()
 
 usage.get('/usage', requireAnonymousId, (c) => {
   const info = getUsage(c.get('anonymousId'))

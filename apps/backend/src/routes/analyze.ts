@@ -1,12 +1,12 @@
 import { Hono } from 'hono'
 import { ApiError } from '../errors'
 import { requireAnonymousId } from '../middleware/anonymous'
-import { extractEventFromImage } from '../mocks/llm'
 import { getUsage, incrementUsage, isLimitExceeded } from '../mocks/store'
-import type { AnalyzeResponse, AppVariables } from '../types'
+import { ExtractionError, extractEventFromImage } from '../services/gemini'
+import type { AnalyzeResponse, AppBindings, AppVariables } from '../types'
 
 // POST /api/v1/analyze — 画像からイベント情報を抽出（docs/api-design.md 5.2）
-export const analyze = new Hono<{ Variables: AppVariables }>()
+export const analyze = new Hono<{ Bindings: AppBindings; Variables: AppVariables }>()
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024 // 10MB
 const SUPPORTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
@@ -46,11 +46,15 @@ analyze.post('/analyze', requireAnonymousId, async (c) => {
   const hintRaw = form.get('hint')
   const hint = typeof hintRaw === 'string' ? hintRaw : undefined
 
-  // 3. LLM でイベント情報を抽出（モック）
+  // 3. Gemini でイベント情報を抽出
   let extraction
   try {
-    extraction = await extractEventFromImage(image, hint)
-  } catch {
+    extraction = await extractEventFromImage(image, c.env.GEMINI_API_KEY, hint)
+  } catch (err) {
+    if (err instanceof ExtractionError) {
+      throw new ApiError('EXTRACTION_FAILED', 'フライヤーからイベント情報を読み取れませんでした。')
+    }
+    console.error('Gemini API error:', err)
     throw new ApiError('LLM_UPSTREAM_ERROR', 'イベント情報の抽出に失敗しました。')
   }
 

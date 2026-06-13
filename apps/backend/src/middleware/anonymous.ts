@@ -1,13 +1,16 @@
 import type { MiddlewareHandler } from 'hono'
 import { ApiError } from '../errors'
 import { touchUser } from '../mocks/store'
-import type { AppVariables } from '../types'
+import type { AppBindings, AppVariables } from '../types'
 
 /**
  * 匿名ユーザー識別ミドルウェア（docs/api-design.md 2.3）。
  * X-Anonymous-Id を必須とし、ユーザーの登録/最終利用日時更新を行う。
  */
-export const requireAnonymousId: MiddlewareHandler<{ Variables: AppVariables }> = async (
+export const requireAnonymousId: MiddlewareHandler<{
+  Bindings: AppBindings
+  Variables: AppVariables
+}> = async (
   c,
   next,
 ) => {

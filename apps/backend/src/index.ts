@@ -3,16 +3,18 @@ import { ApiError, errorResponse } from './errors'
 import { analyze } from './routes/analyze'
 import { health } from './routes/health'
 import { usage } from './routes/usage'
-import type { AppVariables } from './types'
+import type { AppBindings, AppVariables } from './types'
 
-const app = new Hono<{ Variables: AppVariables }>()
+type AppEnv = { Bindings: AppBindings; Variables: AppVariables }
+
+const app = new Hono<AppEnv>()
 
 app.get('/', (c) => {
   return c.text('Hello Hono!')
 })
 
 // API v1 ルート
-const api = new Hono<{ Variables: AppVariables }>()
+const api = new Hono<AppEnv>()
 api.route('/', health)
 api.route('/', analyze)
 api.route('/', usage)

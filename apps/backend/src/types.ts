@@ -44,6 +44,11 @@ export interface UsageResponse extends UsageInfo {
   remaining: number
 }
 
+/** Cloudflare Workers バインディング（wrangler secret / .dev.vars で管理） */
+export type AppBindings = {
+  GEMINI_API_KEY: string
+}
+
 /** Hono コンテキストに載せる変数 */
 export type AppVariables = {
   anonymousId: string

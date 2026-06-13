@@ -1,8 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "backend",
+  "name": "flycal-backend",
   "main": "src/index.ts",
-  "compatibility_date": "2026-05-23"
+  "compatibility_date": "2026-05-23",
+  // GEMINI_API_KEY はシークレットのため wrangler.jsonc には記載しない。
+  // ローカル: apps/backend/.dev.vars に GEMINI_API_KEY=AIza... を記述
+  // 本番: wrangler secret put GEMINI_API_KEY
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
